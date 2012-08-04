@@ -56,12 +56,12 @@ void Server::reply()
 {
     QTcpSocket* socket = qobject_cast<QTcpSocket*>(sender());
 
-    Opcode opcode = Socket::ExtractOpcode(socket);
+    Packet packet(socket);
     QString user = logins.value(socket);
 
-    qDebug() << socket->readAll();
+    qDebug() << "handling data, opcode:" << packet.opcode() << ", data: " << packet.data();
 
-    if (opcode == OPC_LOGIN || opcode == OPC_FORCELOGIN)
+    if (packet.opcode() == OPC_LOGIN || packet.opcode() == OPC_FORCELOGIN)
     {
         if (!user.isEmpty())
         {
@@ -69,7 +69,7 @@ void Server::reply()
             return;
         }
 
-        QList<QByteArray> args = socket->readAll().split(' ');
+        QList<QByteArray> args = packet.data().split(' ');
 
         QString pass;
 
@@ -79,7 +79,7 @@ void Server::reply()
             pass = args.at(1);
         }
 
-        login(socket, user, pass, opcode == OPC_FORCELOGIN);
+        login(socket, user, pass, packet.opcode() == OPC_FORCELOGIN);
         return;
     }
 
@@ -94,12 +94,12 @@ void Server::reply()
         cerr.flush();
     }
 
-    switch (opcode)
+    switch (packet.opcode())
     {
         default:
             Socket::write(socket, OPC_INVALIDCMD);
 
-            cerr << "invalid command: " << opcode << "\n";
+            cerr << "invalid opcode: " << packet.opcode() << "\n";
             cerr.flush();
 
             return;

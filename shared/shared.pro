@@ -5,7 +5,9 @@ CONFIG += dll
 DESTDIR = $$PWD/../bin/lib
 
 HEADERS += \
-    socket.h
+    socket.h \
+    packet.h
 
 SOURCES += \
-    socket.cpp
+    socket.cpp \
+    packet.cpp

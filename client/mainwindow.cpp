@@ -37,6 +37,18 @@ void MainWindow::lockGui(bool lock)
 
 void MainWindow::doConnect()
 {
+    if (ui->userEdit->text().isEmpty() || ui->userEdit->text().contains(QChar(' ')))
+    {
+        QMessageBox::critical(this, tr("Invalid username"), tr("The username cannot contain any whitespaces!"));
+        return;
+    }
+
+    if (ui->passEdit->text().isEmpty())
+    {
+        QMessageBox::critical(this, tr("Please enter password"), tr("You must enter password to proceed!"));
+        return;
+    }
+
 	ui->connBtn->setDisabled(true);
 	ui->actionConnect->setDisabled(true);
     setStatus(tr("Connecting..."));
@@ -96,11 +108,11 @@ void MainWindow::gotError(QAbstractSocket::SocketError /*error*/)
 
 void MainWindow::handleReply()
 {
-    Opcode opcode = Socket::ExtractOpcode(socket);
+    Packet packet(socket);
 
-    qDebug() << "handling data:" << socket->readAll();
+    qDebug() << "handling data, opcode:" << packet.opcode() << ", data: " << packet.data();
 
-    switch (opcode)
+    switch (packet.opcode())
     {
         case OPC_LOGIN:
             login();
@@ -137,16 +149,25 @@ void MainWindow::handleReply()
 void MainWindow::login(bool force)
 {
 	QString user = ui->userEdit->text();
-    if (user.contains(QChar(' ')))
+    if (user.isEmpty() || user.contains(QChar(' ')))
 	{
-        gotDisconnected();
+        //gotDisconnected();
+        socket->disconnectFromHost();
         QMessageBox::critical(this, tr("Invalid username"), tr("The username cannot contain any whitespaces!"));
 		return;
 	}
 
-    setStatus(tr("Logging in..."));
+    if (ui->passEdit->text().isEmpty())
+    {
+        //gotDisconnected();
+        socket->disconnectFromHost();
+        QMessageBox::critical(this, tr("Please enter password"), tr("You must enter password to proceed!"));
+        return;
+    }
 
     QString pass = QCryptographicHash::hash(ui->passEdit->text().toAscii(), QCryptographicHash::Sha1).toHex();
+
+    setStatus(tr("Logging in..."));    
 
     QByteArray data = QString("%1 %2").arg(user).arg(pass).toUtf8();
 
