@@ -1,5 +1,5 @@
 #include "socket.h"
-
+#include "ircconstants.h"
 
 /*Opcode Socket::GetOpcode(QByteArray data)
 {
@@ -14,6 +14,7 @@ Opcode Socket::ExtractOpcode(QTcpSocket * sock)
 void Socket::write(QTcpSocket* socket, Opcode opcode, QByteArray data)
 {
     QByteArray packetData = QByteArray::number(opcode) + " " + data;
+    packetData.append(IRC::END);
     socket->write(packetData);
     socket->flush();
 }

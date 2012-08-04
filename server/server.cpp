@@ -2,6 +2,7 @@
 
 #include <QtNetwork>
 #include <cstdio>
+#include <ircconstants.h>
 
 Server::Server(QHostAddress addr, int port) : cerr(stderr, QIODevice::WriteOnly)
 {
@@ -56,62 +57,104 @@ void Server::reply()
 {
     QTcpSocket* socket = qobject_cast<QTcpSocket*>(sender());
 
-    Packet packet(socket);
-    QString user = logins.value(socket);
+    QString fu = socket->readAll();
+    QStringList l = fu.split(IRC::END);
 
-    qDebug() << "handling data, opcode:" << packet.opcode() << ", data: " << packet.data();
-
-    if (packet.opcode() == OPC_LOGIN || packet.opcode() == OPC_FORCELOGIN)
+    foreach (QString a, l)
     {
-        if (!user.isEmpty())
+        Packet packet(a.toUtf8());
+
+        if (packet.opcode() == OPC_NULL)
+            return;
+
+        QString user = logins.value(socket);
+
+        qDebug() << "handling data, opcode:" << packet.opcode() << ", data: " << packet.data();
+
+        if (packet.opcode() == OPC_LOGIN || packet.opcode() == OPC_FORCELOGIN)
         {
-            Socket::write(socket, OPC_ALREADYLOGGED);
+            if (!user.isEmpty())
+            {
+                Socket::write(socket, OPC_ALREADYLOGGED);
+                return;
+            }
+
+            QList<QByteArray> args = packet.data().split(' ');
+
+            QString pass;
+
+            if (args.size() == 2)
+            {
+                user = args.at(0);
+                pass = args.at(1);
+            }
+
+            login(socket, user, pass, packet.opcode() == OPC_FORCELOGIN);
             return;
         }
 
-        QList<QByteArray> args = packet.data().split(' ');
-
-        QString pass;
-
-        if (args.size() == 2)
+        if (user.isEmpty())
         {
-            user = args.at(0);
-            pass = args.at(1);
-        }
+            QString ip(socket->peerAddress().toString());
 
-        login(socket, user, pass, packet.opcode() == OPC_FORCELOGIN);
-        return;
-    }
+            socket->disconnectFromHost();
 
-    if (user.isEmpty())
-    {
-        QString ip(socket->peerAddress().toString());
-
-        socket->disconnectFromHost();
-
-        cerr << tr("a client (IP=%1) has requested something without being logged in,").arg(ip)
-             << "\n" << tr("which is suspicious – closing the connection.") << "\n";
-        cerr.flush();
-    }
-
-    switch (packet.opcode())
-    {
-        default:
-            Socket::write(socket, OPC_INVALIDCMD);
-
-            cerr << "invalid opcode: " << packet.opcode() << "\n";
+            cerr << tr("a client (IP=%1) has requested something without being logged in,").arg(ip)
+                 << "\n" << tr("which is suspicious – closing the connection.") << "\n";
             cerr.flush();
+        }
 
-            return;
+        switch (packet.opcode())
+        {
+            case OPC_REQUEST_CONNECTION:
+            {
+                QList<QByteArray> parts = packet.data().split('|');
+                estabilishIRCconnection(parts[0], parts[1].split(' '));
+                break;
+            }
+            case OPC_IRC_SEND:
+            {
+                IRCconnection * con = connections.first();
+                con->sendCommandAsap(packet.data().trimmed());
+                break;
+            }
+            default:
+                Socket::write(socket, OPC_INVALIDCMD);
+
+                cerr << "invalid opcode: " << packet.opcode() << "\n";
+                cerr.flush();
+
+                return;
+        }
     }
 }
 
+void Server::estabilishIRCconnection(QByteArray host, QList<QByteArray> channels)
+{
+    QList<QByteArray> hostParts = host.split(':');
+    QByteArray address  = hostParts[0].trimmed();
+    quint16 port = hostParts[1].trimmed().toInt();
+
+    IRCconnection * conn = new IRCconnection(address, port);
+    connections.push_back(conn);
+    QString username = logins.begin().value();
+    conn->connectAs(username, username, username ,username);
+
+    foreach (QByteArray channel, channels)
+        conn->joinChannel(channel);
+
+    connect(conn, SIGNAL(messageReceived(QByteArray)), this, SLOT(handleReceivedMessage(QByteArray)));
+}
+
+void Server::handleReceivedMessage(QByteArray message)
+{
+    QTcpSocket * socket = logins.begin().key();
+    Socket::write(socket, OPC_MESSAGE_RECIEVED, message);
+
+}
 
 void Server::login(QTcpSocket* socket, const QString& user, const QString& pass, bool force)
 {
-    qDebug() << "loguju neasi";
-    qDebug() << "user " + user;
-    qDebug() << "pass " + pass;
     QString setting_str = QString("logins/%1").arg(user);
     bool isPresent = settings.contains(setting_str);
     if (isPresent)

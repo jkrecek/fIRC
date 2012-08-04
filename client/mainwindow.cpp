@@ -3,6 +3,7 @@
 
 #include <QtGui>
 #include <QtNetwork>
+#include <ircconstants.h>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -20,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     connect(ui->connBtn, SIGNAL(clicked()), SLOT(doConnect()));
     connect(ui->sendBtn, SIGNAL(clicked()), SLOT(doSend()));
+    connect(ui->todoEdit, SIGNAL(returnPressed()), SLOT(doSend()));
     connect(ui->actionConnect, SIGNAL(triggered()), SLOT(doConnect()));
     connect(ui->actionDisconnect, SIGNAL(triggered()), socket, SLOT(disconnectFromHostImplementation()));
     connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
@@ -84,7 +86,10 @@ void MainWindow::gotConnected()
 
 void MainWindow::doSend()
 {
-
+    QString message = ui->todoEdit->text();
+    QByteArray data = QByteArray("PRIVMSG #soulwell") /*+ channelName.toUtf8()*/ + " :" + message.toUtf8();
+    Socket::write(socket, OPC_IRC_SEND, data);
+    ui->todoEdit->clear();
 }
 
 void MainWindow::gotDisconnected()
@@ -108,41 +113,56 @@ void MainWindow::gotError(QAbstractSocket::SocketError /*error*/)
 
 void MainWindow::handleReply()
 {
-    Packet packet(socket);
+    QString fu = QString(socket->readAll());
+    QStringList l = fu.split(IRC::END);
 
-    qDebug() << "handling data, opcode:" << packet.opcode() << ", data: " << packet.data();
-
-    switch (packet.opcode())
+    foreach (QString a, l)
     {
-        case OPC_LOGIN:
-            login();
-            break;
-        case OPC_LOGGED:
-            setStatus(tr("Logged in..."));
-            break;
-        case OPC_ALREADYLOGGED:
+        Packet packet(a.toUtf8());
+
+        if (packet.opcode() == OPC_NULL)
+            return;
+
+        qDebug() << "handling data, opcode:" << packet.opcode() << ", data: " << packet.data();
+
+        switch (packet.opcode())
         {
-            QMessageBox::StandardButton r = QMessageBox::warning(this, tr("User already logged in!"),
-                             tr("Your account is already logged in, probably from somewhere else. Do you want to force the login and disconnect the other client?"),
-                             QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+            case OPC_LOGIN:
+                login();
+                break;
+            case OPC_LOGGED:
+                setStatus(tr("Logged in..."));
+                // request connection
+                Socket::write(socket, OPC_REQUEST_CONNECTION, "irc.rizon.net:6667|#soulwell #soulwell2");
+                break;
+            case OPC_ALREADYLOGGED:
+            {
+                QMessageBox::StandardButton r = QMessageBox::warning(this, tr("User already logged in!"),
+                                 tr("Your account is already logged in, probably from somewhere else. Do you want to force the login and disconnect the other client?"),
+                                 QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
 
-            if (r == QMessageBox::Yes)
-                login(true);
-            else
-                socket->disconnectFromHost();
+                if (r == QMessageBox::Yes)
+                    login(true);
+                else
+                    socket->disconnectFromHost();
 
-            break;
+                break;
+            }
+            case OPC_WRONGLOGIN:
+                socket->disconnect(SIGNAL(error(QAbstractSocket::SocketError)));
+                QMessageBox::critical(this, tr("Wrong login"),
+                              tr("You've entered a wrong username or password!") + "\n" +
+                              tr("Connection has been closed by the remote server."));
+                connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), SLOT(gotError(QAbstractSocket::SocketError)));
+                break;
+            case OPC_MESSAGE_RECIEVED:
+                ui->listWidget->addItem(packet.data());
+                break;
+            default:
+                qDebug() << "ERROR, opcode:" << packet.opcode() << ", data: " << packet.data();
+                QMessageBox::critical(this, tr("Unknown command from the server"),
+                        tr("Server has sent an unknown command, which could mean that your client version is outdated."));
         }
-        case OPC_WRONGLOGIN:
-            socket->disconnect(SIGNAL(error(QAbstractSocket::SocketError)));
-            QMessageBox::critical(this, tr("Wrong login"),
-                          tr("You've entered a wrong username or password!") + "\n" +
-                          tr("Connection has been closed by the remote server."));
-            connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), SLOT(gotError(QAbstractSocket::SocketError)));
-            break;
-        default:
-            QMessageBox::critical(this, tr("Unknown command from the server"),
-                          tr("Server has sent an unknown command, which could mean that your client version is outdated."));
     }
 }
 
@@ -169,8 +189,8 @@ void MainWindow::login(bool force)
 
     setStatus(tr("Logging in..."));    
 
-    QByteArray data = QString("%1 %2").arg(user).arg(pass).toUtf8();
+    QByteArray data = user.toUtf8() + " " + pass.toUtf8();
 
-    Socket::write(socket, force ? OPC_FORCELOGIN : OPC_FORCELOGIN, data);
+    Socket::write(socket, force ? OPC_FORCELOGIN : OPC_LOGIN, data);
 }
 

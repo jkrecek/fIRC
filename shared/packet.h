@@ -14,13 +14,17 @@ enum Opcode
     OPC_FORCELOGIN          = 0x05,
     OPC_INVALIDCMD          = 0x06,
     OPC_TOOMANYWRONGLOGINS  = 0x07,
-    NUM_OPC                 = 0x08
+    OPC_REQUEST_CONNECTION  = 0x08,
+    OPC_MESSAGE_RECIEVED    = 0x09,
+    OPC_IRC_SEND            = 0x0A,
+    NUM_OPC
 };
 
 class Packet
 {
     public:
-        Packet(QTcpSocket* socket);
+        //Packet(QTcpSocket* socket);
+        Packet(QByteArray data);
 
         Opcode opcode()     const { return opcode_m; }
         QByteArray data()   const { return data_m; }
