@@ -20,7 +20,7 @@ Server::Server(QHostAddress addr, int port) : cerr(stderr, QIODevice::WriteOnly)
     QString ipport = addr.toString() + ":" + QString::number(port);
     if (!listening)
     {
-        cerr << tr("couldn't bind to %1, quitting…").arg(ipport) + "\n";
+        cerr << tr("couldn't bind to %1, quitting ...").arg(ipport) + "\n";
         cerr.flush();
 
         QTimer::singleShot(0, qApp, SLOT(quit()));
@@ -100,7 +100,7 @@ void Server::reply()
             socket->disconnectFromHost();
 
             cerr << tr("a client (IP=%1) has requested something without being logged in,").arg(ip)
-                 << "\n" << tr("which is suspicious – closing the connection.") << "\n";
+                 << "\n" << tr("which is suspicious - closing the connection.") << "\n";
             cerr.flush();
         }
 

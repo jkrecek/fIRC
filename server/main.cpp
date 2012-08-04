@@ -16,7 +16,6 @@ int main(int argc, char *argv[])
     a.setApplicationName("fIRC");
     a.setOrganizationDomain("firc.cz");
 
-    // nastavíme kódování C øetìzcù
     QTextCodec::setCodecForCStrings( QTextCodec::codecForName("UTF-8") );
 
     Server s(addr, port);
