@@ -21,14 +21,7 @@ class IRCconnection : public QObject
 
     public slots:
         void connectAs(const QString& nickName, const QString& userName, const QString& realName, const QString& userPassword);
-        void changeNickName(const QString& nickName);
-        void sendMessageToChannel(const QString& channelName, const QString& messageContent);
-        void sendMessageToUser(const QString& userName, const QString& messageContent);
-        void sendNoticeToUser(const QString& userName, const QString& messageContent);
-        void sendActionToChannel(const QString& channelName, const QString& messageContent);
-        void sendActionToUser(const QString& userName, const QString& messageContent);
         void sendCommandAsap(const QByteArray& command);
-        void joinChannel(const QString& channelName);
         void setEncoding(const QByteArray& codecName);
         void connectToServer();
         void disconnect(const QByteArray& quitMessage = QByteArray("Disconnected for unknown reason"));
@@ -44,12 +37,7 @@ class IRCconnection : public QObject
     private:
         void sendMessage(const QString& rawText);
 
-        void addChannelMessageToQueue(const QString& channelName, const QString& messageContent);
-        void addPrivateMessageToQueue(const QString& userName, const QString& messageContent);
-        void addChannelActionToQueue(const QString& channelName, const QString& messageContent);
-        void addPrivateActionToQueue(const QString& userName, const QString& messageContent);
         void addJoinChannelRequestToQueue(const QString& channelName);
-        void addChangeNickNameRequestToQueue(const QString& nickName);
         void handleServerMessage(const Message& message);
 
         void send(const QByteArray& rawData);

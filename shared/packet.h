@@ -23,8 +23,10 @@ enum Opcode
 class Packet
 {
     public:
-        //Packet(QTcpSocket* socket);
-        Packet(QByteArray data);
+        Packet(Opcode opcode, QByteArray data);
+
+        static void write(QTcpSocket* socket, Opcode opcode = OPC_NULL, QByteArray data = QByteArray());
+        static Packet read(QByteArray data);
 
         Opcode opcode()     const { return opcode_m; }
         QByteArray data()   const { return data_m; }

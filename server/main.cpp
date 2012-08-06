@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     QHostAddress addr(QHostAddress::Any);
 
     a.setApplicationName("fIRC");
-    a.setOrganizationDomain("firc.cz");
+    a.setOrganizationDomain("Frca");
 
     QTextCodec::setCodecForCStrings( QTextCodec::codecForName("UTF-8") );
 

@@ -9,7 +9,7 @@
 #include <QHash>
 #include <QSettings>
 
-#include <socket.h>
+#include <packet.h>
 #include "ircconnection.h"
 
 class QTcpServer;

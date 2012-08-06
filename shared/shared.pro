@@ -5,16 +5,16 @@ CONFIG += dll
 DESTDIR = $$PWD/../bin/lib
 
 HEADERS += \
-    socket.h \
     packet.h \
     messageparser.h \
     message.h \
     ircconstants.h \
-    ircconnection.h
+    ircconnection.h \
+    messagebuilder.h
 
 SOURCES += \
-    socket.cpp \
     packet.cpp \
     messageparser.cpp \
     message.cpp \
-    ircconnection.cpp
+    ircconnection.cpp \
+    messagebuilder.cpp

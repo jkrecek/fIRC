@@ -5,6 +5,8 @@
 #include <QtNetwork>
 #include <ircconstants.h>
 
+#include <messagebuilder.h>
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
@@ -20,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     statusBar()->addWidget(statusLabel);
 
     connect(ui->connBtn, SIGNAL(clicked()), SLOT(doConnect()));
+    connect(ui->passEdit, SIGNAL(returnPressed()), SLOT(doConnect()));
     connect(ui->sendBtn, SIGNAL(clicked()), SLOT(doSend()));
     connect(ui->todoEdit, SIGNAL(returnPressed()), SLOT(doSend()));
     connect(ui->actionConnect, SIGNAL(triggered()), SLOT(doConnect()));
@@ -87,8 +90,16 @@ void MainWindow::gotConnected()
 void MainWindow::doSend()
 {
     QString message = ui->todoEdit->text();
-    QByteArray data = QByteArray("PRIVMSG #soulwell") /*+ channelName.toUtf8()*/ + " :" + message.toUtf8();
-    Socket::write(socket, OPC_IRC_SEND, data);
+    if (message.isEmpty())
+        return;
+
+    QByteArray data;
+    if (message.toLower().startsWith(IRC::ActionPrefix))
+        data = MessageBuilder::Action("#soulwell", message.mid(IRC::ActionPrefix.size()));
+    else
+        data = MessageBuilder::Message("#soulwell", message);
+
+    Packet::write(socket, OPC_IRC_SEND, data);
     ui->todoEdit->clear();
 }
 
@@ -113,12 +124,9 @@ void MainWindow::gotError(QAbstractSocket::SocketError /*error*/)
 
 void MainWindow::handleReply()
 {
-    QString fu = QString(socket->readAll());
-    QStringList l = fu.split(IRC::END);
-
-    foreach (QString a, l)
+    while (socket->canReadLine())
     {
-        Packet packet(a.toUtf8());
+        Packet packet = Packet::read(socket->readLine());
 
         if (packet.opcode() == OPC_NULL)
             return;
@@ -133,7 +141,7 @@ void MainWindow::handleReply()
             case OPC_LOGGED:
                 setStatus(tr("Logged in..."));
                 // request connection
-                Socket::write(socket, OPC_REQUEST_CONNECTION, "irc.rizon.net:6667|#soulwell #soulwell2");
+                Packet::write(socket, OPC_REQUEST_CONNECTION, "irc.rizon.net:6667|#soulwell #soulwell2");
                 break;
             case OPC_ALREADYLOGGED:
             {
@@ -157,6 +165,7 @@ void MainWindow::handleReply()
                 break;
             case OPC_MESSAGE_RECIEVED:
                 ui->listWidget->addItem(packet.data());
+                ui->listWidget->scrollToBottom();
                 break;
             default:
                 qDebug() << "ERROR, opcode:" << packet.opcode() << ", data: " << packet.data();
@@ -191,6 +200,6 @@ void MainWindow::login(bool force)
 
     QByteArray data = user.toUtf8() + " " + pass.toUtf8();
 
-    Socket::write(socket, force ? OPC_FORCELOGIN : OPC_LOGIN, data);
+    Packet::write(socket, force ? OPC_FORCELOGIN : OPC_LOGIN, data);
 }
 

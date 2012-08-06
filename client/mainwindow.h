@@ -5,7 +5,7 @@
 #include <QAbstractSocket>
 #include <QByteArray>
 
-#include <socket.h>
+#include <packet.h>
 
 class MyTcpSocket;
 class QTcpSocket;

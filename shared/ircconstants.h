@@ -35,7 +35,10 @@ namespace IRC
     static const QString NickIdentifyPrefix = "NICK";
     static const QString PassIdentifyPrefix = "PASS";
 
-    static const QChar END = QChar(2);
+    static const QString ActionPrefix = "/me ";
+
+    static const QByteArray END = "\n";
+    static const QString ALT_END = QString(char(10));
 }
 
 #endif // IRCCONSTANTS_H
