@@ -10,11 +10,13 @@ HEADERS += \
     message.h \
     ircconstants.h \
     ircconnection.h \
-    messagebuilder.h
+    messagebuilder.h \
+    firc.h
 
 SOURCES += \
     packet.cpp \
     messageparser.cpp \
     message.cpp \
     ircconnection.cpp \
-    messagebuilder.cpp
+    messagebuilder.cpp \
+    firc.cpp

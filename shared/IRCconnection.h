@@ -16,7 +16,7 @@ class IRCconnection : public QObject
         IRCconnection(const QString& serverAdress, quint16 serverPort = 6667, QObject *parent = 0);
         ~IRCconnection();
         
-        bool isLoggedIn() const;
+        bool isLoggedIn() const { return loggedIn_m; }
         QString ownNick() const { return nickName_m; }
 
     public slots:
@@ -35,15 +35,9 @@ class IRCconnection : public QObject
         void login();
 
     private:
-        void sendMessage(const QString& rawText);
-
-        void addJoinChannelRequestToQueue(const QString& channelName);
-        void handleServerMessage(const Message& message);
-
         void send(const QByteArray& rawData);
 
         void sendCommandsInQueue();
-        void enqueuedCommand();
 
         QByteArray encode(const QString& text);
 

@@ -7,8 +7,8 @@
 class MessageParser
 {
     public:
-        static QString messageToRawText(const Message& message, const QByteArray& defaultCodec = QByteArray("UTF-8"));
-        static Message receivedRawTextToMessage(const QByteArray& rawText, const QByteArray& defaultCodec = QByteArray("UTF-8"));
+        static Message incomingMessage(const QByteArray& rawText, const QByteArray& defaultCodec = QByteArray("UTF-8"));
+        static Message outgoingMessage(const QByteArray& rawText, const QByteArray& defaultCodec = QByteArray("UTF-8"));
 
     private:
         static QString decodeRawText(const QByteArray& rawText, const QByteArray& defaultCodec = QByteArray("UTF-8"));

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>TODO client</string>
+   <string>Client</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -99,17 +99,7 @@
        </layout>
       </item>
       <item>
-       <widget class="QListWidget" name="listWidget">
-        <property name="baseSize">
-         <size>
-          <width>600</width>
-          <height>400</height>
-         </size>
-        </property>
-        <property name="selectionMode">
-         <enum>QAbstractItemView::ExtendedSelection</enum>
-        </property>
-       </widget>
+       <widget class="QTabWidget" name="tabWidget" />
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">

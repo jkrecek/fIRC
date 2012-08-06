@@ -8,8 +8,6 @@
 struct Message
 {
     public:
-        friend class MessageParser;
-
         Message();
         ~Message() {}
 
@@ -24,7 +22,6 @@ struct Message
         bool isPing() const;
         bool isPrivate() const;
 
-    private:
         void setSenderNick(QString senderNick) { senderNick_m = senderNick; }
         void setCommand(QString command) { command_m = command; }
         void setContent(QString content) { content_m = content; }
@@ -34,6 +31,7 @@ struct Message
         void setSendTime(int time = time(0)) { send_time_m = time; }
         void setChannel(QString channel) { senderChannel_m = channel; }
 
+    private:
         QString senderNick_m;
         QString senderChannel_m;
         QString command_m;

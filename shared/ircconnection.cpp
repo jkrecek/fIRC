@@ -55,13 +55,9 @@ void IRCconnection::login()
 
 void IRCconnection::sendCommandAsap(const QByteArray& command)
 {
+    commandsInQueue_m.push_back(command.trimmed());
     if (isLoggedIn())
-        send(command.trimmed());
-    else
-    {
-        commandsInQueue_m.push_back(command.trimmed());
-        enqueuedCommand();
-    }
+        sendCommandsInQueue();
 }
 
 void IRCconnection::sendCommandsInQueue()
@@ -74,18 +70,6 @@ void IRCconnection::sendCommandsInQueue()
             send(command);
         }
     }
-}
-
-void IRCconnection::enqueuedCommand()
-{
-    if (loggedIn_m)
-        sendCommandsInQueue();
-}
-
-void IRCconnection::sendMessage(const QString& rawText)
-{
-    QByteArray rawData = rawText.toUtf8();
-    send(rawData);
 }
 
 void IRCconnection::send(const QByteArray& rawData)
@@ -105,22 +89,21 @@ void IRCconnection::readData()
     while (socket_m->canReadLine())
     {
         QByteArray messageInRawText = socket_m->readLine();
-        emit messageReceived(messageInRawText);
+        Message message = MessageParser::incomingMessage(messageInRawText);
 
-        Message message = MessageParser::receivedRawTextToMessage(messageInRawText);
-        if (message.isServerMessage())
-            handleServerMessage(message);
-    }
-}
+        if (message.isPing())
+        {
+            send("PONG :" + message.content().toUtf8());
+            continue;
+        }
 
-void IRCconnection::handleServerMessage(const Message& message)
-{
-    if (message.isPing())
-        sendMessage("PONG :" + message.content());
-    else if (message.command() == IRC::Reply::WELCOME)
-    {
-        loggedIn_m = true;
-        sendCommandsInQueue();
+        if (message.command() == IRC::Reply::WELCOME)
+        {
+            loggedIn_m = true;
+            sendCommandsInQueue();
+        }
+
+        emit messageReceived(messageInRawText);        
     }
 }
 
@@ -137,11 +120,6 @@ void IRCconnection::setEncoding(const QByteArray& codecName)
         codecName_m = codecName;
         codec_m = QTextCodec::codecForName(codecName_m);
     }
-}
-
-bool IRCconnection::isLoggedIn() const
-{
-    return loggedIn_m;
 }
 
 void IRCconnection::disconnect(const QByteArray& quitMessage)

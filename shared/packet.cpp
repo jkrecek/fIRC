@@ -10,7 +10,6 @@ Packet::Packet(Opcode opcode, QByteArray data) : opcode_m(opcode), data_m(data)
 
 Packet Packet::read(QByteArray data)
 {
-    qDebug() << "packet raw: " << data;
     int idx = data.indexOf(' ', 1);
 
     if (idx == -1)

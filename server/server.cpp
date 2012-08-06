@@ -5,7 +5,9 @@
 #include <ircconstants.h>
 #include <messagebuilder.h>
 
-Server::Server(QHostAddress addr, int port) : cerr(stderr, QIODevice::WriteOnly)
+Server::Server(QHostAddress addr, int port) :
+    cerr(stderr, QIODevice::WriteOnly),
+    settings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName())
 {
     server = new QTcpServer(this);
 
@@ -153,7 +155,8 @@ void Server::handleReceivedMessage(QByteArray message)
 
 void Server::login(QTcpSocket* socket, const QString& user, const QString& pass, bool force)
 {
-    QString setting_str = "logins/" + user;
+    QString setting_str = "l" + user +"/pass";
+
     if (settings.contains(setting_str))
     {
         QString savedpass = settings.value(setting_str).toString();

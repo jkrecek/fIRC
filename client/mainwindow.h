@@ -4,8 +4,11 @@
 #include <QMainWindow>
 #include <QAbstractSocket>
 #include <QByteArray>
+#include <QSettings>
+#include <QTextBrowser>
 
 #include <packet.h>
+#include <messageparser.h>
 
 class MyTcpSocket;
 class QTcpSocket;
@@ -27,11 +30,20 @@ class MainWindow : public QMainWindow
         Ui::MainWindow *ui;
         QTcpSocket* socket;
         QLabel* statusLabel;
+        QMap<QString, int> indexMap;
+
+        QSettings settings;
+
+        QString pendingChannel;
 
         void setStatus(const QString& statusmsg);
 
         void login(bool force = false);
         void lockGui(bool lock = true);
+
+        void showMessage(const Message message);
+
+        QTextBrowser* createTab(QString channelName);
 
     private slots:
         void doConnect();

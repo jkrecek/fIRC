@@ -7,7 +7,7 @@ MessageParser::MessageParser()
 {
 }
 
-Message MessageParser::receivedRawTextToMessage(const QByteArray& rawText, const QByteArray& defaultCodec)
+Message MessageParser::incomingMessage(const QByteArray& rawText, const QByteArray& defaultCodec)
 {
     Message message;
 
@@ -89,6 +89,30 @@ Message MessageParser::receivedRawTextToMessage(const QByteArray& rawText, const
     message.setCommand(command.trimmed());
     message.setContent(content.trimmed());
     message.setSendTime();
+
+    return message;
+}
+
+Message MessageParser::outgoingMessage(const QByteArray &rawText, const QByteArray &defaultCodec)
+{
+    Message message;
+
+    QByteArray trimmedRawText = rawText.trimmed();
+    QString unicodeRawText = decodeRawText(trimmedRawText, defaultCodec);
+
+    QStringList messageParts = unicodeRawText.split(' ', QString::SkipEmptyParts);
+
+    QString senderNick = "JÁ";
+    QString command = messageParts.takeFirst().toUpper();
+    QString senderChannel = messageParts.takeFirst();
+    QString content = messageParts.join(" ").trimmed();
+    if (content.startsWith(":"))
+        content.remove(0,1);
+
+    message.setSenderNick(senderNick.trimmed());
+    message.setChannel(senderChannel.trimmed());
+    message.setCommand(command.trimmed());
+    message.setContent(content.trimmed());
 
     return message;
 }

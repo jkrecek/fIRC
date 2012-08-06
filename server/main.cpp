@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     int port = 2266;
     QHostAddress addr(QHostAddress::Any);
 
-    a.setApplicationName("fIRC");
+    a.setApplicationName("fIRC_server");
     a.setOrganizationDomain("Frca");
 
     QTextCodec::setCodecForCStrings( QTextCodec::codecForName("UTF-8") );
