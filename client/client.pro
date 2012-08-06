@@ -8,10 +8,14 @@ else:DESTDIR = $$PWD/../bin/release
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    firctab.cpp \
+    channeluser.cpp
 
 HEADERS += \
-    mainwindow.h
+    mainwindow.h \
+    firctab.h \
+    channeluser.h
 
 FORMS += mainwindow.ui
 CODECFORTR = UTF-8

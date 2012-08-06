@@ -9,7 +9,8 @@ enum Rank
     RANK_ADMIN,
     RANK_OPERATOR,
     RANK_HALF_OPERATOR,
-    RANK_VOICE
+    RANK_VOICE,
+    RANK_NONE
 };
 
 namespace RankHandler

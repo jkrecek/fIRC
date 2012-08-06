@@ -125,38 +125,22 @@ void MainWindow::doSend()
 void MainWindow::showMessage(const Message message)
 {
     QString line;
-    QTextBrowser * channelTab = createTab(message.senderChannel());
-    /*int newIdx;
-    if (indexMap.contains(message.senderChannel()))
-    {
-        newIdx = indexMap.value(message.senderChannel());
-        channelTab = (QTextBrowser*)ui->tabWidget->widget(newIdx);
-    }
-    else
-    {
-        newIdx = ui->tabWidget->addTab(new QTextBrowser, message.senderChannel());
-        indexMap.insert(message.senderChannel(), newIdx);
-        channelTab = (QTextBrowser*)ui->tabWidget->widget(newIdx);
-        channelTab->setOpenExternalLinks(true);        
-    }
-
-    if (ui->tabWidget->currentIndex() == 0 && newIdx != 0)
-        ui->tabWidget->setCurrentIndex(newIdx);*/
-
-
+    QString tabName;
 
     if (message.command() == IRC::Command::Join && message.senderNick() == ui->userEdit->text())
     {
         pendingChannel = message.content();
         createTab(pendingChannel);
-        return;
     }
     else if (message.command() == IRC::Reply::TOPIC)
     {
-        line = "Topic: '" + message.content() + "'";
+        tabName = pendingChannel;
+        line += "(" + QTime::currentTime().toString() +") ";
+        line += "<i>Topic: '" + message.content() + "'</i>";
     }
     else if (message.command() == IRC::Command::PrivMsg)
     {
+        tabName = message.senderChannel();
         line += "(" + QTime::currentTime().toString() +") ";
         if (!message.senderNick().isEmpty())
             line += "[" + message.senderNick() + "] ";
@@ -164,48 +148,17 @@ void MainWindow::showMessage(const Message message)
     }
     else
     {
+        tabName = "Global";
         line += "<" + message.command() + "> ";
         line += "(" + QTime::currentTime().toString() +") ";
         if (!message.senderNick().isEmpty())
             line += "[" + message.senderNick() + "] ";
         line += message.content();
     }
-    /*{
-        newIdx = ui->tabWidget->addTab(new QTextBrowser, message.content());
-        indexMap.insert(message.content(), newIdx);
-        channelTab = (QTextBrowser*)ui->tabWidget->widget(newIdx);
-        channelTab->setOpenExternalLinks(true);
-    }*/
 
-    /*QString content = message.content();
-
-    QString address;
-
-    static QStringList prefixes = (QStringList() << "http://" << "https://" << "www." );
-    int idx = 0, lenght;
-    foreach (QString prefix, prefixes)
+    if (!line.isEmpty() && !tabName.isEmpty())
     {
-        idx = 0;
-        while ((idx = content.toLower().indexOf(prefix, idx)) != -1)
-        {
-            lenght = content.indexOf(' ', idx) - idx;
-            address = content.mid(idx, lenght);
-            content.replace(idx, lenght, "<a href=\"" + address + "\">" + address + "</a>");
-        }
-    }*/
-
-    /*while ((idx = content.toLower().indexOf(QRegExp("https?:"), idx)) != -1)
-    {
-        lenght = content.indexOf(' ', idx) - idx;
-        address = content.mid(idx, lenght);
-        content.replace(idx, lenght, "<a href=\"" + address + "\">" + address + "</a>");
-    }*/
-
-    //line += "<a href=\"http://www.seznam.cz\">" +  message.content() + "</a>";
-
-
-    if (!line.isEmpty())
-    {
+        QTextBrowser * channelTab = createTab(tabName);
         channelTab->append(line);
 
         // scroll to bottom of tab
@@ -225,6 +178,8 @@ QTextBrowser* MainWindow::createTab(QString channelName)
         QTextBrowser* channelTab = (QTextBrowser*)ui->tabWidget->widget(idx);
         channelTab->setOpenExternalLinks(true);
         ui->tabWidget->setCurrentIndex(idx);
+        if (channelName.startsWith("#"))
+            channelTab->setText("Welcome on channel " + channelName);
         return channelTab;
     }
 }
@@ -233,7 +188,6 @@ void MainWindow::gotDisconnected()
 {
     setStatus(tr("Disconnected!"));
 
-    //ui->textBrowser->clear();
     lockGui();
 	ui->connBtn->setEnabled(true);
 	ui->actionDisconnect->setDisabled(true);
@@ -257,7 +211,7 @@ void MainWindow::handleReply()
         if (packet.opcode() == OPC_NULL)
             return;
 
-        qDebug() << "handling data, opcode:" << packet.opcode() << ", data: " << packet.data();
+        qDebug() << "DATA - opcode:" << packet.opcode() << ", data:" << packet.data();
 
         switch (packet.opcode())
         {
@@ -267,13 +221,15 @@ void MainWindow::handleReply()
             case OPC_LOGGED:
                 setStatus(tr("Logged in..."));
                 // request connection
-                Packet::write(socket, OPC_REQUEST_CONNECTION, "irc.rizon.net:6667|#soulwell #soulwell2");
+                Packet::write(socket, OPC_REQUEST_CONNECTION, "irc.rizon.net:6667|#soulwell");
                 break;
             case OPC_ALREADYLOGGED:
             {
-                QMessageBox::StandardButton r = QMessageBox::warning(this, tr("User already logged in!"),
-                                 tr("Your account is already logged in, probably from somewhere else. Do you want to force the login and disconnect the other client?"),
-                                 QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+                QMessageBox::StandardButton r = QMessageBox::warning(this,
+                    tr("User already logged in!"),
+                    tr("Your account is already logged in, probably from somewhere else. Do you want to force the login and disconnect the other client?"),
+                    QMessageBox::Yes|QMessageBox::No,
+                    QMessageBox::No);
 
                 if (r == QMessageBox::Yes)
                     login(true);
