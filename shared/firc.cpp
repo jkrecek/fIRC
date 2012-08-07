@@ -20,11 +20,10 @@ bool fIRC::isFromGlobalChannel(QString channel)
 QString fIRC::addHyperLinks(QString content)
 {
     QString address, newAddress;
-    int idx = 0, lenght;
+    int idx = 0;
     while ((idx = content.toLower().indexOf(QRegExp("https?://"), idx)) != -1)
     {
-        lenght = content.indexOf(' ', idx) - idx;
-        address = content.mid(idx, lenght);
+        address = content.mid(idx, content.indexOf(' ', idx) - idx);
         newAddress = "<a href=\"" + address + "\">" + address + "</a>";
         content.replace(address, newAddress);
         idx += newAddress.size()-1;
