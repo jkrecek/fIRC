@@ -144,7 +144,8 @@ void MainWindow::showMessage(const Message message)
         line += "(" + QTime::currentTime().toString() +") ";
         if (!message.senderNick().isEmpty())
             line += "[" + message.senderNick() + "] ";
-        line += message.content();
+
+        line += fIRC::addHyperLinks(message.content());
     }
     else
     {
@@ -155,6 +156,9 @@ void MainWindow::showMessage(const Message message)
             line += "[" + message.senderNick() + "] ";
         line += message.content();
     }
+
+    if (message.content() == "VYPIS")
+        qDebug() << ((QTextBrowser*)ui->tabWidget->currentWidget())->toHtml();
 
     if (!line.isEmpty() && !tabName.isEmpty())
     {

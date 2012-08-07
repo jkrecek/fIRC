@@ -32,5 +32,6 @@ QList<ChannelUser> ChannelUser::ParseUserList(QString line)
 
         l.push_back(ChannelUser(user, r));
     }
+    return l;
 }
 

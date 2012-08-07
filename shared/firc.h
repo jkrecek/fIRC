@@ -6,6 +6,7 @@
 namespace fIRC
 {
     bool isFromGlobalChannel(QString channel);
+    QString addHyperLinks(QString content);
 }
 
 #endif // FIRC_H
