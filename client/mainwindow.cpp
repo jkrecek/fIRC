@@ -6,6 +6,7 @@
 #include <ircconstants.h>
 
 #include <messagebuilder.h>
+#include "widgets/ircconnectionselectdialog.h"
 #include <firc.h>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -13,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow),
     settings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName())
 {
-	ui->setupUi(this);
+    ui->setupUi(this);
 
     socket = new QTcpSocket(this);
 
@@ -40,12 +41,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
 void MainWindow::lockGui(bool lock)
 {
-	ui->actionDisconnect->setDisabled(lock);
+    ui->actionDisconnect->setDisabled(lock);
     ui->sendBtn->setDisabled(lock);
 }
 
 void MainWindow::doConnect()
 {
+    QDialog *window = new IRCconnectionSelectDialog(this);
+    window->show();
+    return;
+
     if (ui->userEdit->text().isEmpty() || ui->userEdit->text().contains(QChar(' ')))
     {
         QMessageBox::critical(this, tr("Invalid username"), tr("The username cannot contain any whitespaces!"));
@@ -58,36 +63,36 @@ void MainWindow::doConnect()
         return;
     }
 
-	ui->connBtn->setDisabled(true);
-	ui->actionConnect->setDisabled(true);
+    ui->connBtn->setDisabled(true);
+    ui->actionConnect->setDisabled(true);
     setStatus(tr("Connecting..."));
 
-	QString strAddr = ui->addressEdit->text();
-	int port = ui->portEdit->value();
+    QString strAddr = ui->addressEdit->text();
+    quint16 port = ui->portEdit->value();
 
-	QHostAddress addr;
+    QHostAddress addr;
 
     if (!addr.setAddress(strAddr))
-	{
+    {
         QMessageBox::critical(this, tr("Invalid IP address"), tr("You've entered an invalid IP address!"));
-		ui->addressEdit->setFocus();
-		return;
-	}
+        ui->addressEdit->setFocus();
+        return;
+    }
 
-	socket->connectToHost(addr, port);
+    socket->connectToHost(addr, port);
 }
 
 void MainWindow::setStatus(const QString& statusmsg)
 {
     QString status = QDate::currentDate().toString(Qt::SystemLocaleShortDate) + " " + QTime::currentTime().toString() + " - " + statusmsg;
-	statusLabel->setText(status);
+    statusLabel->setText(status);
 }
 
 void MainWindow::gotConnected()
 {
     setStatus(tr("Successfully connected!"));
 
-	ui->actionDisconnect->setEnabled(true);
+    ui->actionDisconnect->setEnabled(true);
     lockGui(false);
 }
 
@@ -177,10 +182,11 @@ QTextBrowser* MainWindow::createTab(QString channelName)
         return (QTextBrowser*)ui->tabWidget->widget(indexMap.value(channelName));
     else
     {
-        int idx = ui->tabWidget->addTab(new QTextBrowser, channelName);
+        quint16 idx = ui->tabWidget->addTab(new QTextBrowser, channelName);
         indexMap.insert(channelName, idx);
         QTextBrowser* channelTab = (QTextBrowser*)ui->tabWidget->widget(idx);
         channelTab->setOpenExternalLinks(true);
+        channelTab->setStyleSheet("a { color: #3C3C3C; text-decoration: none; }");
         ui->tabWidget->setCurrentIndex(idx);
         if (channelName.startsWith("#"))
             channelTab->setText("Welcome on channel " + channelName);
@@ -193,9 +199,9 @@ void MainWindow::gotDisconnected()
     setStatus(tr("Disconnected!"));
 
     lockGui();
-	ui->connBtn->setEnabled(true);
-	ui->actionDisconnect->setDisabled(true);
-	ui->actionConnect->setEnabled(true);
+    ui->connBtn->setEnabled(true);
+    ui->actionDisconnect->setDisabled(true);
+    ui->actionConnect->setEnabled(true);
 }
 
 void MainWindow::gotError(QAbstractSocket::SocketError /*error*/)
@@ -203,7 +209,7 @@ void MainWindow::gotError(QAbstractSocket::SocketError /*error*/)
     gotDisconnected();
     setStatus(socket->errorString());
 
-	QMessageBox::critical(this, tr("Network error"), socket->errorString());
+    QMessageBox::critical(this, tr("Network error"), socket->errorString());
 }
 
 void MainWindow::handleReply()
@@ -271,13 +277,13 @@ void MainWindow::handleReply()
 
 void MainWindow::login(bool force)
 {
-	QString user = ui->userEdit->text();
+    QString user = ui->userEdit->text();
     if (user.isEmpty() || user.contains(QChar(' ')))
-	{
+    {
         socket->disconnectFromHost();
         QMessageBox::critical(this, tr("Invalid username"), tr("The username cannot contain any whitespaces!"));
-		return;
-	}
+        return;
+    }
 
     if (ui->passEdit->text().isEmpty())
     {
@@ -295,3 +301,7 @@ void MainWindow::login(bool force)
     Packet::write(socket, force ? OPC_FORCELOGIN : OPC_LOGIN, data);
 }
 
+void MainWindow::connectionSelected(QString conName)
+{
+    setStatus("Connecting to " + conName);
+}

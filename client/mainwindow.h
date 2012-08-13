@@ -16,12 +16,12 @@ class QLabel;
 
 namespace Ui
 {
-	class MainWindow;
+    class MainWindow;
 }
 
 class MainWindow : public QMainWindow
 {
-	Q_OBJECT
+    Q_OBJECT
 
     public:
         MainWindow(QWidget *parent = 0);
@@ -30,7 +30,7 @@ class MainWindow : public QMainWindow
         Ui::MainWindow *ui;
         QTcpSocket* socket;
         QLabel* statusLabel;
-        QMap<QString, int> indexMap;
+        QMap<QString, quint16> indexMap;
 
         QSettings settings;
 
@@ -52,6 +52,7 @@ class MainWindow : public QMainWindow
         void gotDisconnected();
         void gotError(QAbstractSocket::SocketError error);
         void handleReply();
+        void connectionSelected(QString conName);
 };
 
 #endif // MAINWINDOW_H

@@ -10,7 +10,7 @@
 
 class IRCconnection : public QObject
 {
-        Q_OBJECT
+    Q_OBJECT
 
     public:
         IRCconnection(const QString& serverAdress, quint16 serverPort = 6667, QObject *parent = 0);

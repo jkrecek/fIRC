@@ -10,31 +10,18 @@
 #include <QSettings>
 
 #include <packet.h>
-#include "ircconnection.h"
+#include "remoteircconnection.h"
 
 class QTcpServer;
 class QTcpSocket;
+class User;
 
 class Server : public QObject
 {
     Q_OBJECT
 
     public:
-        Server(QHostAddress addr = QHostAddress(QHostAddress::Any), int port = 2266);
-
-    private:
-        QTcpServer* server;
-        QTextStream cerr;
-        QHash<QTcpSocket*, QString> logins;
-        QHash<QString, int> log;
-
-        QSettings settings;
-
-        QList<IRCconnection*> connections;
-
-        void login(QTcpSocket* socket, const QString& user, const QString& pass, bool force = false);
-
-        void estabilishIRCconnection(QByteArray host, QList<QByteArray> channels);
+        Server(QHostAddress addr = QHostAddress(QHostAddress::Any), quint16 port = 2266);
 
     private slots:
         void purgeLog();
@@ -43,6 +30,19 @@ class Server : public QObject
         void gotDisconnected();
 
         void handleReceivedMessage(QByteArray message);
+
+    private:
+        void login(QTcpSocket* socket, const QString& user, const QString& pass);
+        void estabilishIRCconnectionForUser(QByteArray host, QList<QByteArray> channels, User* user);
+
+        QTcpServer* server;
+        QTextStream cerr;
+        QHash<QString, int> log;
+
+        QSettings settings;
+
+        QHash<QTcpSocket*, User*> user_conns_m;
+        QHash<User*, RemoteIRCconnection*> IRC_conns_m;
 };
 
 #endif // SERVER_H

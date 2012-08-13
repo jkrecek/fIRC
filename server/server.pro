@@ -10,10 +10,15 @@ else:DESTDIR = $$PWD/../bin/release
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    server.cpp
+    server.cpp \
+    user.cpp \
+    usermgr.cpp
 
 HEADERS += \
-    server.h
+    server.h \
+    user.h \
+    usermgr.h \
+    remoteircconnection.h
 
 INCLUDEPATH += ../shared
 LIBS += -L"$$PWD/../bin/lib" -lshared

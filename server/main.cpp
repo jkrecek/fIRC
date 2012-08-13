@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    int port = 2266;
+    quint16 port = 2266;
     QHostAddress addr(QHostAddress::Any);
 
     a.setApplicationName("fIRC_server");

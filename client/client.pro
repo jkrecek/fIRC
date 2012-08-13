@@ -10,14 +10,18 @@ TEMPLATE = app
 SOURCES += main.cpp \
     mainwindow.cpp \
     firctab.cpp \
-    channeluser.cpp
+    channeluser.cpp \
+    widgets/ircconnectionselectdialog.cpp
 
 HEADERS += \
     mainwindow.h \
     firctab.h \
-    channeluser.h
+    channeluser.h \
+    widgets/ircconnectionselectdialog.h
 
-FORMS += mainwindow.ui
+FORMS += mainwindow.ui \
+    widgets/ircconnectionselectdialog.ui
+
 CODECFORTR = UTF-8
 
 INCLUDEPATH += ../shared

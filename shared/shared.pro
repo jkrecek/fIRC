@@ -11,7 +11,8 @@ HEADERS += \
     ircconstants.h \
     ircconnection.h \
     messagebuilder.h \
-    firc.h
+    firc.h \
+    Singleton.h
 
 SOURCES += \
     packet.cpp \
@@ -19,4 +20,4 @@ SOURCES += \
     message.cpp \
     ircconnection.cpp \
     messagebuilder.cpp \
-    firc.cpp
+    firc.cpp \

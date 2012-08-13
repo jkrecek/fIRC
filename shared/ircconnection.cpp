@@ -102,6 +102,11 @@ void IRCconnection::readData()
             loggedIn_m = true;
             sendCommandsInQueue();
         }
+        else if (message.command() == IRC::Reply::NICKTAKEN)
+        {
+            nickName_m.append("1");
+            login();
+        }
 
         emit messageReceived(messageInRawText);        
     }
