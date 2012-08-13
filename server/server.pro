@@ -17,8 +17,7 @@ SOURCES += main.cpp \
 HEADERS += \
     server.h \
     user.h \
-    usermgr.h \
-    remoteircconnection.h
+    usermgr.h
 
 INCLUDEPATH += ../shared
 LIBS += -L"$$PWD/../bin/lib" -lshared

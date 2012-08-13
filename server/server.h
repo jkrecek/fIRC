@@ -10,7 +10,7 @@
 #include <QSettings>
 
 #include <packet.h>
-#include "remoteircconnection.h"
+#include <ircconnection.h>
 
 class QTcpServer;
 class QTcpSocket;
@@ -42,7 +42,7 @@ class Server : public QObject
         QSettings settings;
 
         QHash<QTcpSocket*, User*> user_conns_m;
-        QHash<User*, RemoteIRCconnection*> IRC_conns_m;
+        QHash<User*, IRCconnection*> IRC_conns_m;
 };
 
 #endif // SERVER_H

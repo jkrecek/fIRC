@@ -140,7 +140,7 @@ void Server::estabilishIRCconnectionForUser(QByteArray host, QList<QByteArray> c
     QByteArray address  = hostParts[0].trimmed();
     quint16 port = hostParts[1].trimmed().toInt();
 
-    RemoteIRCconnection * conn = new RemoteIRCconnection(user, address, port);
+    IRCconnection * conn = new IRCconnection(address, port);
     IRC_conns_m.insert(user, conn);
     QString username = user->userName_m;
     conn->connectAs(username, username, username ,username);
@@ -153,8 +153,9 @@ void Server::estabilishIRCconnectionForUser(QByteArray host, QList<QByteArray> c
 
 void Server::handleReceivedMessage(QByteArray message)
 {
-    RemoteIRCconnection* connection = qobject_cast<RemoteIRCconnection*>(sender());
-    QTcpSocket * socket = user_conns_m.key(connection->GetOwner());
+    IRCconnection* connection = qobject_cast<IRCconnection*>(sender());
+    User* owner = IRC_conns_m.key(connection);
+    QTcpSocket * socket = user_conns_m.key(owner);
 
     Packet::write(socket, OPC_MESSAGE_RECIEVED, message);
 }
