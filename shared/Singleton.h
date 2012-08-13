@@ -1,8 +1,6 @@
 #ifndef SINGLETON_H
 #define SINGLETON_H
 
-#include "firc_lib_global.h"
-
 template <class T>
 class Singleton
 {
