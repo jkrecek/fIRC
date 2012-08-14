@@ -12,12 +12,14 @@ TEMPLATE = app
 SOURCES += main.cpp \
     server.cpp \
     user.cpp \
-    usermgr.cpp
+    usermgr.cpp \
+    userconnection.cpp
 
 HEADERS += \
     server.h \
     user.h \
-    usermgr.h
+    usermgr.h \
+    userconnection.h
 
 INCLUDEPATH += ../shared
 LIBS += -L"$$PWD/../bin/lib" -lshared

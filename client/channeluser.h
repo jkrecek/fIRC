@@ -2,7 +2,7 @@
 #define CHANNELUSER_H
 
 #include <QList>
-#include <messagebuilder.h>
+#include <messagehandler.h>
 
 class ChannelUser
 {

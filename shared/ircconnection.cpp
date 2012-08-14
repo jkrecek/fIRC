@@ -2,16 +2,17 @@
 #include <QTextCodec>
 #include "IRCconnection.h"
 #include "ircconstants.h"
-#include "messageparser.h"
+#include "messagehandler.h"
 
-IRCconnection::IRCconnection(const QString& serverAddress, quint16 serverPort, QObject* parent) :
+IRCconnection::IRCconnection(const QString &serverAddress, quint16 serverPort, const QString &label, QObject *parent):
     QObject(parent),
     serverAddress_m(serverAddress),
     serverPort_m(serverPort),
     socket_m(0),
     loggedIn_m(false),
     codecName_m("UTF-8"),
-    codec_m(QTextCodec::codecForName(codecName_m))
+    codec_m(QTextCodec::codecForName(codecName_m)),
+    label_m(label)
 {
 
 }

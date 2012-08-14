@@ -3,8 +3,10 @@
 #include <QtNetwork>
 #include <cstdio>
 #include <ircconstants.h>
-#include <messagebuilder.h>
+#include <messagehandler.h>
 #include "usermgr.h"
+#include <firc.h>
+#include <QHash>
 
 Server::Server(QHostAddress addr, quint16 port) :
     cerr(stderr, QIODevice::WriteOnly),
@@ -60,6 +62,7 @@ void Server::handleNewConnection()
 void Server::reply()
 {
     QTcpSocket* socket = qobject_cast<QTcpSocket*>(sender());
+    UserConnection* userConn = getConnection(qobject_cast<QTcpSocket*>(sender()));
 
     while (socket->canReadLine())
     {
@@ -68,13 +71,11 @@ void Server::reply()
         if (packet.opcode() == OPC_NULL)
             return;
 
-        User * user = user_conns_m.value(socket);
-
         qDebug() << "Handling data, opcode:" << packet.opcode() << ", data: " << packet.data();
 
         if (packet.opcode() == OPC_LOGIN || packet.opcode() == OPC_FORCELOGIN)
         {
-            if (user)
+            if (userConn)
             {
                 Packet::write(socket, OPC_ALREADYLOGGED);
                 return;
@@ -94,7 +95,7 @@ void Server::reply()
             return;
         }
 
-        if (!user)
+        if (!userConn)
         {
             QString ip(socket->peerAddress().toString());
 
@@ -110,21 +111,65 @@ void Server::reply()
             case OPC_REQUEST_CONNECTION:
             {
                 QList<QByteArray> parts = packet.data().split('|');
-                estabilishIRCconnectionForUser(parts[0], parts[1].split(' '), user);
+                QByteArray connMethod = parts[0];
+
+                IRCconnection * conn = NULL;
+                if (connMethod == fIRC::ConnectionMethod::New)
+                {
+                    QByteArray label = parts[1];
+                    QByteArray host = parts[2];
+                    QByteArray nick = parts[3];
+                    QList<QByteArray> channels = parts[4].split(' ');
+                    conn = newIRCconn(userConn->user_m, label, host, nick, channels);
+                    userConn->addIRCtoListen(conn);
+                }
+                else if (connMethod == fIRC::ConnectionMethod::Connect)
+                {
+                    QByteArray label = parts[1];
+                    QByteArray host = parts[2];
+                    QByteArray nick = parts[3];
+                    conn = getIRCConnection(userConn->user_m, label, host, nick);
+                    userConn->addIRCtoListen(conn);
+                }
+                else
+                {
+                    Packet::write(userConn->socket_m, OPC_ERROR, "ERROR at opcode " + QByteArray::number(packet.opcode()) + ": unknown connection method \"" + connMethod + "\"");
+                    break;
+                }
+
+                if (conn)
+                    userConn->addIRCtoListen(conn);
+                else
+                    Packet::write(userConn->socket_m, OPC_ERROR, "ERROR at opcode " + QByteArray::number(packet.opcode()) + ": connection couldn't be estabilished or was not found");
+
                 break;
             }
             case OPC_IRC_SEND:
             {
-                IRCconnection * con = IRC_conns_m.value(user);
+                // TODO specify server in packet
+                IRCconnection * con = userConn->listeningIRCconns_m.first();
                 if (con)
                     con->sendCommandAsap(packet.data().trimmed());
                 else
-                    Packet::write(socket, OPC_ERROR, "No IRC connection to send to!");
+                    Packet::write(userConn->socket_m, OPC_ERROR, "No IRC connection to send to!");
 
                 break;
             }
+            case OPC_REQ_IRC_LIST:
+            {
+                Packet::write(userConn->socket_m, OPC_IRC_CONN_DATA, fIRC::Position::Start);
+
+                User* user = userConn->user_m;
+                for(QList<QPair<User*, IRCconnection*> >::Iterator itr = IRC_conns_m.begin(); itr != IRC_conns_m.end(); ++itr)
+                    if ((*itr).first == user)
+                        if (IRCconnection* conn = (*itr).second)
+                            Packet::write(userConn->socket_m, OPC_IRC_CONN_DATA, conn->GetLabel().toUtf8() + "|" + conn->Address().toUtf8().append(":").append(QByteArray::number(conn->Port())) + "|" + conn->ownNick().toUtf8());
+
+                Packet::write(userConn->socket_m, OPC_IRC_CONN_DATA, fIRC::Position::End);
+                break;
+            }
             default:
-                Packet::write(socket, OPC_INVALIDCMD);
+                Packet::write(userConn->socket_m, OPC_INVALIDCMD);
 
                 cerr << "Received invalid opcode: " << packet.opcode() << IRC::END;
                 cerr.flush();
@@ -134,30 +179,30 @@ void Server::reply()
     }
 }
 
-void Server::estabilishIRCconnectionForUser(QByteArray host, QList<QByteArray> channels, User* user)
+IRCconnection* Server::newIRCconn(User* user, QByteArray label, QByteArray host, QByteArray nick, QList<QByteArray> channels)
 {
     QList<QByteArray> hostParts = host.split(':');
     QByteArray address  = hostParts[0].trimmed();
     quint16 port = hostParts[1].trimmed().toInt();
 
-    IRCconnection * conn = new IRCconnection(address, port);
-    IRC_conns_m.insert(user, conn);
-    QString username = user->userName_m;
-    conn->connectAs(username, username, username ,username);
+    IRCconnection * conn = new IRCconnection(address, port, label);
+    IRC_conns_m.append(qMakePair(user, conn));
+    QString nickname = nick.isEmpty() ? user->userName_m : nick;
+    conn->connectAs(nickname, user->userName_m, "fIRC", "");
 
     foreach (QByteArray channel, channels)
         conn->sendCommandAsap(MessageBuilder::Join(channel));
 
     connect(conn, SIGNAL(messageReceived(QByteArray)), SLOT(handleReceivedMessage(QByteArray)));
+    return conn;
 }
 
 void Server::handleReceivedMessage(QByteArray message)
 {
     IRCconnection* connection = qobject_cast<IRCconnection*>(sender());
-    User* owner = IRC_conns_m.key(connection);
-    QTcpSocket * socket = user_conns_m.key(owner);
-
-    Packet::write(socket, OPC_MESSAGE_RECIEVED, message);
+    foreach(UserConnection* userConn, connections_m)
+        if (userConn->listeningIRCconns_m.contains(connection))
+            Packet::write(userConn->socket_m, OPC_MESSAGE_RECIEVED, message);
 }
 
 void Server::login(QTcpSocket* socket, const QString& user, const QString& pass)
@@ -177,7 +222,7 @@ void Server::login(QTcpSocket* socket, const QString& user, const QString& pass)
     QString message;
     if (loggedOk)
     {
-        user_conns_m.insert(socket, desiredUser);
+        connections_m.insert(socket, new UserConnection(desiredUser, socket));
 
         opcode = OPC_LOGGED;
         message = "User " + user + " successfully logged in";
@@ -201,15 +246,15 @@ void Server::gotDisconnected()
 {
     QTcpSocket* socket = qobject_cast<QTcpSocket*>( sender() );
 
-    User * user = user_conns_m.value(socket);
+    UserConnection* userConn = getConnection(socket);
 
     QString str;
-    if (!user)
+    if (!userConn)
         str = "*not logged*";
     else
     {
-        user_conns_m.remove(socket);
-        str = user->userName_m;
+        connections_m.remove(socket);
+        str = userConn->user_m->userName_m;
     }
 
     socket->deleteLater();
@@ -217,3 +262,25 @@ void Server::gotDisconnected()
     cerr << "Client " + str + " has disconnected" << "\n";
     cerr.flush();
 }
+
+UserConnection* Server::getConnection(QTcpSocket *socket) const
+{
+    /*foreach (UserConnection* conn, connections_m)
+        if (conn->socket_m == socket)
+            return conn;
+
+    return NULL;*/
+    return connections_m.value(socket);
+}
+
+IRCconnection* Server::getIRCConnection(User* user, QByteArray label, QByteArray host, QByteArray nick) const
+{
+    for(QList<QPair<User*, IRCconnection*> >::ConstIterator itr = IRC_conns_m.begin(); itr != IRC_conns_m.end(); ++itr)
+        if ((*itr).first == user)
+            if (IRCconnection* conn = (*itr).second)
+                if (conn->GetLabel() == label && conn->HostName() == host && conn->ownNick() == nick)
+                    return conn;
+
+    return NULL;
+}
+

@@ -7,15 +7,16 @@ namespace IRC
 {
     namespace Command
     {
-        static const QString Ping = "PING";
-        static const QString PrivMsg = "PRIVMSG";
-        static const QString Notice = "NOTICE";
-        static const QString Join = "JOIN";
-        static const QString Kick = "KICK";
-        static const QString Part = "PART";
-        static const QString Topic = "TOPIC";
-        static const QString Error = "ERROR";
-        static const QString Mode = "MODE";
+        static const QByteArray Ping = "PING";
+        static const QByteArray PrivMsg = "PRIVMSG";
+        static const QByteArray Notice = "NOTICE";
+        static const QByteArray Join = "JOIN";
+        static const QByteArray Kick = "KICK";
+        static const QByteArray Part = "PART";
+        static const QByteArray Topic = "TOPIC";
+        static const QByteArray Error = "ERROR";
+        static const QByteArray Mode = "MODE";
+        static const QByteArray Nick = "NICK";
     }
 
     namespace Reply

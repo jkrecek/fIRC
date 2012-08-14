@@ -11,6 +11,7 @@
 
 #include <packet.h>
 #include <ircconnection.h>
+#include "userconnection.h"
 
 class QTcpServer;
 class QTcpSocket;
@@ -33,7 +34,10 @@ class Server : public QObject
 
     private:
         void login(QTcpSocket* socket, const QString& user, const QString& pass);
-        void estabilishIRCconnectionForUser(QByteArray host, QList<QByteArray> channels, User* user);
+        IRCconnection* newIRCconn(User *user, QByteArray label, QByteArray host, QByteArray nick, QList<QByteArray> channels);
+
+        UserConnection* getConnection(QTcpSocket* socket) const;
+        IRCconnection* getIRCConnection(User *user, QByteArray label, QByteArray host, QByteArray nick) const;
 
         QTcpServer* server;
         QTextStream cerr;
@@ -41,8 +45,8 @@ class Server : public QObject
 
         QSettings settings;
 
-        QHash<QTcpSocket*, User*> user_conns_m;
-        QHash<User*, IRCconnection*> IRC_conns_m;
+        QHash<QTcpSocket*, UserConnection*> connections_m;
+        QList<QPair<User*, IRCconnection*> > IRC_conns_m;
 };
 
 #endif // SERVER_H

@@ -18,6 +18,8 @@ enum Opcode
     OPC_MESSAGE_RECIEVED    = 0x09,
     OPC_IRC_SEND            = 0x0A,
     OPC_ERROR               = 0x0B,
+    OPC_REQ_IRC_LIST        = 0x0C,
+    OPC_IRC_CONN_DATA       = 0x0D,
     NUM_OPC
 };
 

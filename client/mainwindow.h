@@ -8,7 +8,10 @@
 #include <QTextBrowser>
 
 #include <packet.h>
-#include <messageparser.h>
+#include <message.h>
+
+#include "widgets/ircconnectionselectdialog.h"
+#include "widgets/ircconnectioncreatedialog.h"
 
 class MyTcpSocket;
 class QTcpSocket;
@@ -26,7 +29,26 @@ class MainWindow : public QMainWindow
     public:
         MainWindow(QWidget *parent = 0);
 
+    private slots:
+        void doConnect();
+        void doSend();
+        void gotConnected();
+        void gotDisconnected();
+        void gotError(QAbstractSocket::SocketError error);
+        void handleReply();
+        void connectionSelected(IRCconnectionSelectDialog::ConnSelectItem connItem);
+        void connectionDataSet(IRCconnectionCreateDialog::ConnCreateItem connItem);
+
     private:
+        void setStatus(const QString& statusmsg);
+        void sendConnect(QByteArray connectionMethod, QByteArray label, QByteArray host, QByteArray nick, QStringList channels = QStringList());
+
+        void login(bool force = false);
+        void lockGui(bool lock = true);
+
+        void showMessage(const Message message);
+        QTextBrowser* createTab(QString channelName);
+
         Ui::MainWindow *ui;
         QTcpSocket* socket;
         QLabel* statusLabel;
@@ -35,24 +57,9 @@ class MainWindow : public QMainWindow
         QSettings settings;
 
         QString pendingChannel;
+        QDialog* pendingDialog;
 
-        void setStatus(const QString& statusmsg);
-
-        void login(bool force = false);
-        void lockGui(bool lock = true);
-
-        void showMessage(const Message message);
-
-        QTextBrowser* createTab(QString channelName);
-
-    private slots:
-        void doConnect();
-        void doSend();
-        void gotConnected();
-        void gotDisconnected();
-        void gotError(QAbstractSocket::SocketError error);
-        void handleReply();
-        void connectionSelected(QString conName);
+        QList<QByteArray> dataBuffer;
 };
 
 #endif // MAINWINDOW_H

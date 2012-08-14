@@ -13,11 +13,16 @@ class IRCconnection : public QObject
     Q_OBJECT
 
     public:
-        IRCconnection(const QString& serverAdress, quint16 serverPort = 6667, QObject *parent = 0);
+        IRCconnection(const QString& serverAddress, quint16 serverPort = 6667, const QString& label = "", QObject *parent = 0);
         ~IRCconnection();
         
         bool isLoggedIn() const { return loggedIn_m; }
         QString ownNick() const { return nickName_m; }
+
+        QString GetLabel() const { return label_m; }
+        QString Address() const { return serverAddress_m; }
+        quint16 Port() const { return serverPort_m; }
+        QString HostName() const { return Address() + ":" + QString::number(Port()); }
 
     public slots:
         void connectAs(const QString& nickName, const QString& userName, const QString& realName, const QString& userPassword);
@@ -53,6 +58,8 @@ class IRCconnection : public QObject
 
         QByteArray codecName_m;
         QTextCodec* codec_m;
+
+        QString label_m;
 
         QList<QByteArray> commandsInQueue_m;
 };

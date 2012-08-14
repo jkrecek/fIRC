@@ -11,16 +11,19 @@ SOURCES += main.cpp \
     mainwindow.cpp \
     firctab.cpp \
     channeluser.cpp \
-    widgets/ircconnectionselectdialog.cpp
+    widgets/ircconnectionselectdialog.cpp \
+    widgets/ircconnectioncreatedialog.cpp \
 
 HEADERS += \
     mainwindow.h \
     firctab.h \
     channeluser.h \
-    widgets/ircconnectionselectdialog.h
+    widgets/ircconnectionselectdialog.h \
+    widgets/ircconnectioncreatedialog.h
 
 FORMS += mainwindow.ui \
-    widgets/ircconnectionselectdialog.ui
+    widgets/ircconnectionselectdialog.ui \
+    widgets/ircconnectioncreatedialog.ui
 
 CODECFORTR = UTF-8
 

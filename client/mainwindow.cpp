@@ -5,14 +5,14 @@
 #include <QtNetwork>
 #include <ircconstants.h>
 
-#include <messagebuilder.h>
-#include "widgets/ircconnectionselectdialog.h"
 #include <firc.h>
+#include "messagehandler.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    settings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName())
+    settings(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName()),
+    pendingDialog(NULL)
 {
     ui->setupUi(this);
 
@@ -47,10 +47,6 @@ void MainWindow::lockGui(bool lock)
 
 void MainWindow::doConnect()
 {
-    QDialog *window = new IRCconnectionSelectDialog(this);
-    window->show();
-    return;
-
     if (ui->userEdit->text().isEmpty() || ui->userEdit->text().contains(QChar(' ')))
     {
         QMessageBox::critical(this, tr("Invalid username"), tr("The username cannot contain any whitespaces!"));
@@ -212,6 +208,11 @@ void MainWindow::gotError(QAbstractSocket::SocketError /*error*/)
     QMessageBox::critical(this, tr("Network error"), socket->errorString());
 }
 
+void MainWindow::sendConnect(QByteArray connectionMethod, QByteArray label, QByteArray host, QByteArray nick, QStringList channels)
+{
+    Packet::write(socket, OPC_REQUEST_CONNECTION, connectionMethod + "|" + label + "|" + host + "|" + nick + "|" + channels.join(" ").toUtf8());
+}
+
 void MainWindow::handleReply()
 {
     while (socket->canReadLine())
@@ -230,8 +231,8 @@ void MainWindow::handleReply()
                 break;
             case OPC_LOGGED:
                 setStatus(tr("Logged in..."));
-                // request connection
-                Packet::write(socket, OPC_REQUEST_CONNECTION, "irc.rizon.net:6667|#soulwell");
+                // request irc lsit
+                Packet::write(socket, OPC_REQ_IRC_LIST);
                 break;
             case OPC_ALREADYLOGGED:
             {
@@ -257,6 +258,31 @@ void MainWindow::handleReply()
 
                 connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), SLOT(gotError(QAbstractSocket::SocketError)));
                 break;
+            case OPC_IRC_CONN_DATA:
+            {
+                if (packet.data() == fIRC::Position::Start)
+                    pendingDialog = new IRCconnectionSelectDialog(this);
+                else if (packet.data() == fIRC::Position::End)
+                {
+                    if (static_cast<IRCconnectionSelectDialog*>(pendingDialog)->isEmpty())
+                    {
+                        pendingDialog->deleteLater();
+                        pendingDialog = new IRCconnectionCreateDialog(this);
+                    }
+                    pendingDialog->show();
+                }
+                else
+                {
+                    QList<QByteArray> parts = packet.data().split('|');
+                    IRCconnectionSelectDialog::ConnSelectItem item;
+                    item.label = parts[0];
+                    item.host = parts[1];
+                    item.nick = parts[2];
+                    item.valid = true;
+                    static_cast<IRCconnectionSelectDialog*>(pendingDialog)->addItem(item);
+                }
+                break;
+            }
             case OPC_MESSAGE_RECIEVED:
             {
                 Message msg = MessageParser::incomingMessage(packet.data());
@@ -266,6 +292,9 @@ void MainWindow::handleReply()
                 showMessage(msg);
                 break;
             }
+            case OPC_ERROR:
+                setStatus(packet.data().trimmed());
+                break;
             default:
                 qDebug() << "ERROR, opcode:" << packet.opcode() << ", data: " << packet.data();
                 QMessageBox::critical(this,
@@ -301,7 +330,21 @@ void MainWindow::login(bool force)
     Packet::write(socket, force ? OPC_FORCELOGIN : OPC_LOGIN, data);
 }
 
-void MainWindow::connectionSelected(QString conName)
+void MainWindow::connectionSelected(IRCconnectionSelectDialog::ConnSelectItem connItem)
 {
-    setStatus("Connecting to " + conName);
+    pendingDialog->deleteLater();
+    pendingDialog = NULL;
+
+    if (connItem.valid)
+        sendConnect(fIRC::ConnectionMethod::Connect, connItem.label, connItem.host, connItem.nick);
+    else
+    {
+        pendingDialog = new IRCconnectionCreateDialog(this);
+        pendingDialog->show();
+    }
+}
+
+void MainWindow::connectionDataSet(IRCconnectionCreateDialog::ConnCreateItem connItem)
+{
+    sendConnect(fIRC::ConnectionMethod::New, connItem.label, connItem.host, connItem.nick, connItem.channels);
 }

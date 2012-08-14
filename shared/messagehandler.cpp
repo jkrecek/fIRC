@@ -1,10 +1,61 @@
+#include "messagehandler.h"
 #include <QStringList>
 #include <QTextCodec>
 #include "ircconstants.h"
-#include "messageparser.h"
 
-MessageParser::MessageParser()
+#define APPLY(apply) QByteArray(apply ? "+" : "-")
+
+QString RankHandler::toString(Rank rank)
 {
+    switch (rank)
+    {
+        case RANK_OWNER:            return "q";
+        case RANK_ADMIN:            return "a";
+        case RANK_OPERATOR:         return "o";
+        case RANK_HALF_OPERATOR:    return "h";
+        case RANK_VOICE:            return "v";
+        default:                    return "";
+    }
+}
+
+QByteArray MessageBuilder::Join(const QString &channel)
+{
+    return IRC::Command::Join +" " + channel.toUtf8();
+}
+
+QByteArray MessageBuilder::Message(const QString &target, const QString &content)
+{
+    return IRC::Command::PrivMsg + " " + target.toUtf8() + " :" + content.toUtf8();
+}
+
+QByteArray MessageBuilder::Action(const QString &target, const QString &content)
+{
+    return MessageBuilder::Message(target, QString(char(1)) + "ACTION " + content + char(1));
+}
+
+QByteArray MessageBuilder::Notice(const QString &user, const QString &content)
+{
+    return IRC::Command::Notice + " " + user.toUtf8() + " :" + content.toUtf8();
+}
+
+QByteArray MessageBuilder::ChangeNick(const QString& newNick)
+{
+    return IRC::Command::Nick + " " + newNick.toUtf8();
+}
+
+QByteArray MessageBuilder::Mode(const QString& channel, const QString& parameters)
+{
+    return IRC::Command::Mode + " " + channel.toUtf8() + " "+ parameters.toUtf8();
+}
+
+QByteArray MessageBuilder::GiveRank(const QString &channel, const QString &nick, Rank rank, bool apply)
+{
+    return Mode(channel, APPLY(apply) + RankHandler::toString(rank) + " " + nick.toUtf8());
+}
+
+QByteArray MessageBuilder::Kick(const QString& nick, const QString& channel, const QString& reason)
+{
+    return IRC::Command::Kick + " " + channel.toUtf8() + " " + nick.toUtf8() + (!reason.isEmpty() ? (" :") + reason.toUtf8() : "");
 }
 
 Message MessageParser::incomingMessage(const QByteArray& rawText, const QByteArray& defaultCodec)
