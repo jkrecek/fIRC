@@ -2,6 +2,8 @@
 #include <QDebug>
 #include <QRegExp>
 
+#include <QCryptographicHash>
+
 bool fIRC::isFromGlobalChannel(QString channel)
 {
     if (channel.isEmpty())
@@ -30,4 +32,11 @@ QString fIRC::addHyperLinks(QString content)
     }
 
     return content;
+}
+
+QString fIRC::getHashFor(QString pass)
+{
+    QCryptographicHash hash(QCryptographicHash::Sha1);
+    hash.addData(pass.toStdString().c_str(), pass.size());
+    return hash.result().toHex();
 }

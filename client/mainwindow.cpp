@@ -7,6 +7,7 @@
 
 #include <firc.h>
 #include "messagehandler.h"
+#include "firctab.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -37,6 +38,8 @@ MainWindow::MainWindow(QWidget *parent) :
     lockGui();
 
     resize(600, 500);
+
+    doConnect();
 }
 
 void MainWindow::lockGui(bool lock)
@@ -45,7 +48,7 @@ void MainWindow::lockGui(bool lock)
     ui->sendBtn->setDisabled(lock);
 }
 
-void MainWindow::doConnect()
+/*void MainWindow::doConnect()
 {
     if (ui->userEdit->text().isEmpty() || ui->userEdit->text().contains(QChar(' ')))
     {
@@ -76,6 +79,12 @@ void MainWindow::doConnect()
     }
 
     socket->connectToHost(addr, port);
+}*/
+
+void MainWindow::doConnect()
+{
+    ConnectDialog* conD = new ConnectDialog(this);
+    conD->show();
 }
 
 void MainWindow::setStatus(const QString& statusmsg)
@@ -178,9 +187,9 @@ QTextBrowser* MainWindow::createTab(QString channelName)
         return (QTextBrowser*)ui->tabWidget->widget(indexMap.value(channelName));
     else
     {
-        quint16 idx = ui->tabWidget->addTab(new QTextBrowser, channelName);
+        quint16 idx = ui->tabWidget->addTab(new fIRCtab(channelName), channelName);
         indexMap.insert(channelName, idx);
-        QTextBrowser* channelTab = (QTextBrowser*)ui->tabWidget->widget(idx);
+        fIRCtab* channelTab = (fIRCtab*)ui->tabWidget->widget(idx);
         channelTab->setOpenExternalLinks(true);
         channelTab->setStyleSheet("a { color: #3C3C3C; text-decoration: none; }");
         ui->tabWidget->setCurrentIndex(idx);
@@ -347,4 +356,10 @@ void MainWindow::connectionSelected(IRCconnectionSelectDialog::ConnSelectItem co
 void MainWindow::connectionDataSet(IRCconnectionCreateDialog::ConnCreateItem connItem)
 {
     sendConnect(fIRC::ConnectionMethod::New, connItem.label, connItem.host, connItem.nick, connItem.channels);
+}
+
+void MainWindow::connectionCreated(ConnectionDetails details)
+{
+    // save
+    // reload connection list
 }

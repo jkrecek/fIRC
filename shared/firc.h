@@ -7,6 +7,7 @@ namespace fIRC
 {
     bool isFromGlobalChannel(QString channel);
     QString addHyperLinks(QString content);
+    QString getHashFor(QString pass);
 
     namespace Position
     {
@@ -18,6 +19,12 @@ namespace fIRC
     {
         static const QByteArray New = "NEW";
         static const QByteArray Connect = "CONNECT";
+    }
+
+    namespace Ports
+    {
+        static const quint16 DefaultIRC = 6667;
+        static const quint16 DefaultRemote = 2266;
     }
 }
 

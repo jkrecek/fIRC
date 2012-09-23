@@ -17,14 +17,12 @@ int main(int argc, char *argv[])
         QTextCodec::setCodecForTr(unicode);
     }
 
-
-
     QTranslator tr;
     tr.load(a.applicationName() + "_" + QLocale::system().name());
     a.installTranslator(&tr);
 
     MainWindow w;
-    w.setWindowTitle("Client");
+    //w.setWindowTitle("fIRC");
     w.show();
 
     return a.exec();

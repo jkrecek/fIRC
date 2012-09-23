@@ -12,6 +12,7 @@
 
 #include "widgets/ircconnectionselectdialog.h"
 #include "widgets/ircconnectioncreatedialog.h"
+#include "connectdialog.h"
 
 class MyTcpSocket;
 class QTcpSocket;
@@ -34,10 +35,11 @@ class MainWindow : public QMainWindow
         void doSend();
         void gotConnected();
         void gotDisconnected();
-        void gotError(QAbstractSocket::SocketError error);
+        void gotError(QAbstractSocket::SocketError);
         void handleReply();
-        void connectionSelected(IRCconnectionSelectDialog::ConnSelectItem connItem);
-        void connectionDataSet(IRCconnectionCreateDialog::ConnCreateItem connItem);
+        void connectionSelected(IRCconnectionSelectDialog::ConnSelectItem);
+        void connectionDataSet(IRCconnectionCreateDialog::ConnCreateItem);
+        void connectionCreated(ConnectionDetails);
 
     private:
         void setStatus(const QString& statusmsg);
