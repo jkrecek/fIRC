@@ -1,7 +1,14 @@
-#ifndef CONNECTIONDETAILS_H
-#define CONNECTIONDETAILS_H
+#ifndef CONNECTIONMANAGER_H
+#define CONNECTIONMANAGER_H
+
+#include <QList>
+#include <connectionmanager.h>
 
 #include <QString>
+#include <QStringList>
+#include <QSettings>
+
+#include <Singleton.h>
 
 enum ConnectionMethod
 {
@@ -36,7 +43,7 @@ class RemoteConnectionDetails : public ConnectionDetails
 {
     public:
         RemoteConnectionDetails(QString _label, QString _address, QString _user, QString _pass_hash) :
-            ConnectionDetails(_label, CON_LOCAL), m_address(_address), m_user(_user), m_pass_hash(_pass_hash)
+            ConnectionDetails(_label, CON_REMOTE), m_address(_address), m_user(_user), m_pass_hash(_pass_hash)
         {}
 
         const QString m_address;
@@ -44,4 +51,27 @@ class RemoteConnectionDetails : public ConnectionDetails
         const QString m_pass_hash;
 };
 
-#endif // CONNECTIONDETAILS_H
+class ConnectionManager
+{
+    public:
+        ConnectionManager();
+        ~ConnectionManager();
+
+        void loadConnections();
+        void saveConnection(ConnectionDetails* details);
+
+        QString getGroupPrefix(QString connectionLabel);
+
+        QMap<QString, ConnectionDetails*> getConnections() const { return m_connections; }
+        bool hasConnection(QString connLabel) { return m_connections.contains(connLabel); }
+
+    private:
+        QMap<QString, ConnectionDetails*> m_connections;
+        QMap<QString, ConnectionDetails*> m_connections_deleted;
+
+        QSettings settings;
+};
+
+#define sConnections Singleton<ConnectionManager>::Instance()
+
+#endif // CONNECTIONMANAGER_H

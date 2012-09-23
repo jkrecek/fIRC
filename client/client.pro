@@ -13,7 +13,8 @@ SOURCES += main.cpp \
     channeluser.cpp \
     widgets/ircconnectionselectdialog.cpp \
     widgets/ircconnectioncreatedialog.cpp \
-    connectdialog.cpp
+    connectdialog.cpp \
+    connectionmanager.cpp
 
 HEADERS += \
     mainwindow.h \
@@ -22,7 +23,7 @@ HEADERS += \
     widgets/ircconnectionselectdialog.h \
     widgets/ircconnectioncreatedialog.h \
     connectdialog.h \
-    connectiondetails.h
+    connectionmanager.h
 
 FORMS += mainwindow.ui \
     widgets/ircconnectionselectdialog.ui \

@@ -114,7 +114,7 @@ void Server::reply()
                 QByteArray connMethod = parts[0];
 
                 IRCconnection * conn = NULL;
-                if (connMethod == fIRC::ConnectionMethod::New)
+                if (connMethod == fIRC::RemoteConnectionMethod::New)
                 {
                     QByteArray label = parts[1];
                     QByteArray host = parts[2];
@@ -123,7 +123,7 @@ void Server::reply()
                     conn = newIRCconn(userConn->user_m, label, host, nick, channels);
                     userConn->addIRCtoListen(conn);
                 }
-                else if (connMethod == fIRC::ConnectionMethod::Connect)
+                else if (connMethod == fIRC::RemoteConnectionMethod::Connect)
                 {
                     QByteArray label = parts[1];
                     QByteArray host = parts[2];

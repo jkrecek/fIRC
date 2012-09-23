@@ -18,7 +18,7 @@ ConnectDialog::ConnectDialog(QWidget *parent) :
     connect(ui->radioLocal, SIGNAL(toggled(bool)), SLOT(changedConnectionMethodLocal(bool)));
     connect(ui->radioRemote, SIGNAL(toggled(bool)), SLOT(changedConnectionMethodRemote(bool)));
 
-    connect(this, SIGNAL(done(ConnectionDetails)), parent, SLOT(connectionCreated(ConnectionDetails)));
+    connect(this, SIGNAL(done()), parent, SLOT(connectionCreated()));
 }
 
 ConnectDialog::~ConnectDialog()
@@ -119,15 +119,22 @@ void ConnectDialog::accept()
         QStringList channels = ui->editChannels->text().trimmed().split(" ");
         QString nick = ui->editNick->text().trimmed();
 
-        emit done(LocalConnectionDetails(label, address, channels, nick));
+        sConnections.saveConnection(new LocalConnectionDetails(label, address, channels, nick));
     }
     else if (ui->radioRemote->isChecked())
     {
         QString user = ui->editUser->text().trimmed();
         QString pass_hash = fIRC::getHashFor(ui->editPass->text().trimmed());
 
-        emit done(RemoteConnectionDetails(label, address, user, pass_hash));
+        sConnections.saveConnection(new RemoteConnectionDetails(label, address, user, pass_hash));
     }
+    else
+    {
+        QDialog::accept();
+        return;
+    }
+
+    emit done();
 
     QDialog::accept();
 }

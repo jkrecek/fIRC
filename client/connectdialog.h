@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QHBoxLayout>
 
-#include "connectiondetails.h"
+#include "connectionmanager.h"
 
 namespace Ui {
     class ConnectDialog;
@@ -21,7 +21,7 @@ class ConnectDialog : public QDialog
         void accept();
 
     signals:
-        void done(ConnectionDetails);
+        void done();
 
     private slots:
         void changedConnectionMethodLocal(bool);

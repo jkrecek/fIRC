@@ -39,6 +39,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     resize(600, 500);
 
+    sConnections;
     doConnect();
 }
 
@@ -345,7 +346,7 @@ void MainWindow::connectionSelected(IRCconnectionSelectDialog::ConnSelectItem co
     pendingDialog = NULL;
 
     if (connItem.valid)
-        sendConnect(fIRC::ConnectionMethod::Connect, connItem.label, connItem.host, connItem.nick);
+        sendConnect(fIRC::RemoteConnectionMethod::Connect, connItem.label, connItem.host, connItem.nick);
     else
     {
         pendingDialog = new IRCconnectionCreateDialog(this);
@@ -355,11 +356,13 @@ void MainWindow::connectionSelected(IRCconnectionSelectDialog::ConnSelectItem co
 
 void MainWindow::connectionDataSet(IRCconnectionCreateDialog::ConnCreateItem connItem)
 {
-    sendConnect(fIRC::ConnectionMethod::New, connItem.label, connItem.host, connItem.nick, connItem.channels);
+    sendConnect(fIRC::RemoteConnectionMethod::New, connItem.label, connItem.host, connItem.nick, connItem.channels);
 }
 
-void MainWindow::connectionCreated(ConnectionDetails details)
+void MainWindow::connectionCreated()
 {
     // save
+
+
     // reload connection list
 }
