@@ -59,11 +59,15 @@ class ConnectionManager
 
         void loadConnections();
         void saveConnection(ConnectionDetails* details);
+        void deleteConnection(ConnectionDetails* connection, bool permanent);
 
         QString getGroupPrefix(QString connectionLabel);
 
         QMap<QString, ConnectionDetails*> getConnections() const { return m_connections; }
-        bool hasConnection(QString connLabel) { return m_connections.contains(connLabel); }
+        bool hasConnection(QString connLabel) const { return m_connections.contains(connLabel); }
+        ConnectionDetails* getConnection(QString connLabel) const { return m_connections.value(connLabel); }
+
+
 
     private:
         QMap<QString, ConnectionDetails*> m_connections;

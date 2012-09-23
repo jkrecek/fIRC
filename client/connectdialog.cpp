@@ -18,7 +18,7 @@ ConnectDialog::ConnectDialog(QWidget *parent) :
     connect(ui->radioLocal, SIGNAL(toggled(bool)), SLOT(changedConnectionMethodLocal(bool)));
     connect(ui->radioRemote, SIGNAL(toggled(bool)), SLOT(changedConnectionMethodRemote(bool)));
 
-    connect(this, SIGNAL(done()), parent, SLOT(connectionCreated()));
+    connect(this, SIGNAL(done()), parent, SLOT(reloadConnectionList()));
 }
 
 ConnectDialog::~ConnectDialog()
@@ -101,18 +101,19 @@ void ConnectDialog::accept()
         QMessageBox::critical(this, "Invalid label", "Connection must have label!");
         return;
     }
-    if (false)
+    if (sConnections.hasConnection(label))
     {
         QMessageBox::critical(this, "Invalid label", "You already have connection with such label!");
         return;
     }
 
-    QString address = ui->editAddress->text().trimmed() + ":" + ui->editPort->text();
+    QString address = ui->editAddress->text().trimmed();
     if (address.isEmpty())
     {
         QMessageBox::critical(this, "Invalid address", "You must enter address to connect to!");
         return;
     }
+    address += ":" + ui->editPort->text();
 
     if (ui->radioLocal->isChecked())
     {

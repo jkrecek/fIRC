@@ -48,6 +48,10 @@ void ConnectionManager::loadConnections()
 
             det = new RemoteConnectionDetails(connLabel, address, user, pass_hash);
         }
+        else
+            continue;
+
+        settings.endGroup();
 
         if (isValid)
             m_connections.insert(connLabel, det);
@@ -89,4 +93,28 @@ void ConnectionManager::saveConnection(ConnectionDetails *details)
 QString ConnectionManager::getGroupPrefix(QString connectionLabel)
 {
     return fIRC::Connection::ConnectionPrefix + connectionLabel;
+}
+
+void ConnectionManager::deleteConnection(ConnectionDetails* connection, bool permanent)
+{
+    m_connections.remove(connection->m_label);
+    if (!permanent)
+    {
+        settings.setValue(fIRC::Connection::ConnectionList + "/" + connection->m_label, false);
+        m_connections_deleted.insert(connection->m_label, connection);
+    }
+    else
+    {
+        settings.remove(fIRC::Connection::ConnectionList + "/" + connection->m_label);
+
+        settings.beginGroup(getGroupPrefix(connection->m_label));
+        QStringList keys = settings.allKeys();
+
+        foreach (QString key, keys)
+            settings.remove(key);
+
+        settings.endGroup();
+
+        delete connection;
+    }
 }

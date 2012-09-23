@@ -39,7 +39,6 @@ class MainWindow : public QMainWindow
         void handleReply();
         void connectionSelected(IRCconnectionSelectDialog::ConnSelectItem);
         void connectionDataSet(IRCconnectionCreateDialog::ConnCreateItem);
-        void connectionCreated();
 
     private:
         void setStatus(const QString& statusmsg);

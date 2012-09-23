@@ -14,7 +14,8 @@ SOURCES += main.cpp \
     widgets/ircconnectionselectdialog.cpp \
     widgets/ircconnectioncreatedialog.cpp \
     connectdialog.cpp \
-    connectionmanager.cpp
+    connectionmanager.cpp \
+    connectionlist.cpp
 
 HEADERS += \
     mainwindow.h \
@@ -23,13 +24,15 @@ HEADERS += \
     widgets/ircconnectionselectdialog.h \
     widgets/ircconnectioncreatedialog.h \
     connectdialog.h \
-    connectionmanager.h
+    connectionmanager.h \
+    connectionlist.h
 
 FORMS += mainwindow.ui \
     widgets/ircconnectionselectdialog.ui \
     widgets/ircconnectioncreatedialog.ui \
     connectdialog.ui \
-    firctab.ui
+    firctab.ui \
+    connectionlist.ui
 
 CODECFORTR = UTF-8
 

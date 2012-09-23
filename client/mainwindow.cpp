@@ -8,6 +8,7 @@
 #include <firc.h>
 #include "messagehandler.h"
 #include "firctab.h"
+#include "connectionlist.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -84,8 +85,9 @@ void MainWindow::lockGui(bool lock)
 
 void MainWindow::doConnect()
 {
-    ConnectDialog* conD = new ConnectDialog(this);
-    conD->show();
+    //ConnectDialog* conD = new ConnectDialog(this);
+    (new ConnectionList(this))->show();
+    //conD->show();
 }
 
 void MainWindow::setStatus(const QString& statusmsg)
@@ -357,12 +359,4 @@ void MainWindow::connectionSelected(IRCconnectionSelectDialog::ConnSelectItem co
 void MainWindow::connectionDataSet(IRCconnectionCreateDialog::ConnCreateItem connItem)
 {
     sendConnect(fIRC::RemoteConnectionMethod::New, connItem.label, connItem.host, connItem.nick, connItem.channels);
-}
-
-void MainWindow::connectionCreated()
-{
-    // save
-
-
-    // reload connection list
 }
